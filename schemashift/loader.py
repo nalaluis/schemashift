@@ -32,6 +32,8 @@ def load_schema_from_file(path: Union[str, Path]) -> dict:
             data = json.load(f)
     except json.JSONDecodeError as e:
         raise SchemaLoadError(f"Failed to parse JSON schema from '{path}': {e}") from e
+    except OSError as e:
+        raise SchemaLoadError(f"Failed to read schema file '{path}': {e}") from e
     return _validate_schema_structure(data, source=str(path))
 
 
@@ -81,5 +83,9 @@ def _validate_schema_structure(data: dict, source: str) -> dict:
         if not isinstance(table_def["columns"], dict):
             raise SchemaLoadError(
                 f"Schema from '{source}': table '{table_name}'.columns must be a JSON object."
+            )
+        if "indexes" in table_def and not isinstance(table_def["indexes"], dict):
+            raise SchemaLoadError(
+                f"Schema from '{source}': table '{table_name}'.indexes must be a JSON object."
             )
     return data
